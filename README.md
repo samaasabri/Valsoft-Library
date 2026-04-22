@@ -4,10 +4,7 @@ A tiny but complete library management app built for the Valsoft assignment.
 
 **Stack:** FastAPI · SQLModel (SQLite) · Jinja2 + HTMX + Tailwind · Google SSO (Authlib) · Gemini (AI Studio API key or Vertex AI)
 
-- **Video walkthrough:** _<link to OBS demo>_
-- **Live API docs (after running):** http://localhost:8000/docs
-
-## Reviewer's 60-second tour
+## Quick SetUp
 
 If you just want to see it work:
 
