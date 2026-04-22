@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Active Loans - Admin - Mini Library{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-1">Active loans</h1>
+<p class="text-slate-500 text-sm mb-6">Admin view for current checkouts. You can force return any loan.</p>
+
+{% if active %}
+  <div class="card divide-y">
+    {% for loan, book, borrower in active %}
+      {% set overdue = loan.due_at and loan.due_at < now %}
+      <div class="p-4 flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <div class="font-medium truncate">{{ book.title }}</div>
+          <div class="text-sm text-slate-500 truncate">{{ book.author }}</div>
+          <div class="text-xs text-slate-500 mt-1">
+            Borrower: {{ borrower.name or borrower.email }} ({{ borrower.email }})
+          </div>
+          <div class="text-xs mt-1 {% if overdue %}text-rose-600{% else %}text-slate-500{% endif %}">
+            {% if loan.due_at %}Due {{ loan.due_at.strftime('%b %d, %Y') }}{% if overdue %} (overdue){% endif %}{% else %}No due date{% endif %}
+          </div>
+        </div>
+        <form method="post" action="/loans/{{ loan.id }}/return">
+          <button class="btn btn-danger text-sm">Force return</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card p-6 text-slate-500 text-sm">No active loans right now.</div>
+{% endif %}
+{% endblock %}

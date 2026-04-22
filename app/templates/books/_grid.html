@@ -1,0 +1,13 @@
+<div id="book-grid">
+  {% if books %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for book in books %}
+        {% include "books/_card.html" %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-10 text-center text-slate-500">
+      No books match your filters. Try clearing the search.
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}Edit Book{% else %}Add Book{% endif %} - Mini Library{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <a href="/books" class="text-sm text-slate-500 hover:underline">&larr; Back to books</a>
+  <h1 class="text-2xl font-semibold mt-2 mb-4">{% if mode == 'edit' %}Edit book{% else %}Add a new book{% endif %}</h1>
+
+  <form class="card p-5 grid grid-cols-1 md:grid-cols-2 gap-4" method="post"
+        action="{% if mode == 'edit' %}/books/{{ book.id }}/edit{% else %}/books/new{% endif %}">
+
+    <div class="md:col-span-2 flex items-start justify-between gap-3 border border-dashed border-brand-200 bg-brand-50 rounded-lg p-3">
+      <div class="text-sm">
+        <div class="font-medium text-brand-700">AI metadata autofill</div>
+        <div class="text-slate-600">Enter a title + author, then click Autofill to have Gemini suggest summary, genre, tags and year.</div>
+      </div>
+      <button type="button" id="autofill-btn" class="btn btn-primary shrink-0"
+              {% if not settings.gemini_enabled %}disabled title="Set GEMINI_API_KEY to enable"{% endif %}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l1.9 4.8L19 9.7l-4.1 3 1.2 5.3L12 15.9 7.9 18l1.2-5.3L5 9.7l5.1-1.9z"/></svg>
+        <span id="autofill-label">Autofill with AI</span>
+      </button>
+    </div>
+
+    <div>
+      <label class="text-sm font-medium">Title *</label>
+      <input id="f-title" class="input mt-1" name="title" required value="{{ book.title if book else '' }}">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Author *</label>
+      <input id="f-author" class="input mt-1" name="author" required value="{{ book.author if book else '' }}">
+    </div>
+    <div>
+      <label class="text-sm font-medium">ISBN</label>
+      <input id="f-isbn" class="input mt-1" name="isbn" value="{{ book.isbn if book and book.isbn else '' }}">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Genre</label>
+      <input id="f-genre" class="input mt-1" name="genre" value="{{ book.genre if book and book.genre else '' }}">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Published year</label>
+      <input id="f-year" class="input mt-1" name="published_year" type="number" min="0" max="3000"
+             value="{{ book.published_year if book and book.published_year else '' }}">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Total copies</label>
+      <input class="input mt-1" name="total_copies" type="number" min="1" value="{{ book.total_copies if book else 1 }}">
+    </div>
+    <div class="md:col-span-2">
+      <label class="text-sm font-medium">Cover image URL</label>
+      <input id="f-cover" class="input mt-1" name="cover_url" value="{{ book.cover_url if book and book.cover_url else '' }}">
+    </div>
+    <div class="md:col-span-2">
+      <label class="text-sm font-medium">Tags (comma separated)</label>
+      <input id="f-tags" class="input mt-1" name="tags" value="{{ book.tags if book and book.tags else '' }}">
+    </div>
+    <div class="md:col-span-2">
+      <label class="text-sm font-medium">Summary</label>
+      <textarea id="f-summary" class="input mt-1" name="summary" rows="5">{{ book.summary if book and book.summary else '' }}</textarea>
+    </div>
+    <div class="md:col-span-2 flex items-center justify-end gap-2 pt-2">
+      <a href="/books" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Save changes{% else %}Add book{% endif %}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('autofill-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const title = document.getElementById('f-title').value.trim();
+    const author = document.getElementById('f-author').value.trim();
+    const label = document.getElementById('autofill-label');
+    if (!title || !author) { alert('Enter title and author first.'); return; }
+    btn.disabled = true; label.textContent = 'Thinking...';
+    try {
+      const res = await fetch('/ai/autofill', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({title, author})
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const setIf = (id, val) => { if (val !== null && val !== undefined && val !== '') document.getElementById(id).value = val; };
+      setIf('f-summary', data.summary);
+      setIf('f-genre', data.genre);
+      setIf('f-year', data.published_year);
+      setIf('f-tags', Array.isArray(data.tags) ? data.tags.join(', ') : data.tags);
+      if (!document.getElementById('f-cover').value && data.cover_url) {
+        setIf('f-cover', data.cover_url);
+      }
+      label.textContent = 'Autofilled';
+      setTimeout(() => { label.textContent = 'Autofill with AI'; }, 1500);
+    } catch (e) {
+      alert('AI autofill failed: ' + e.message);
+      label.textContent = 'Autofill with AI';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}

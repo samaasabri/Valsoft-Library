@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Books - Mini Library{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-semibold">Library</h1>
+    <p class="text-slate-500 text-sm">Browse, borrow, or return books. Use the search bar or the librarian AI.</p>
+  </div>
+  {% if user and user.role == 'admin' %}
+    <a href="/books/new" class="btn btn-primary">+ Add Book</a>
+  {% endif %}
+</div>
+
+<form
+  class="card p-4 mb-6 flex flex-col md:flex-row gap-3 md:items-end"
+  hx-get="/books"
+  hx-target="#book-grid"
+  hx-select="#book-grid"
+  hx-swap="outerHTML"
+  hx-trigger="submit, change from:#genre-filter, change from:#available-filter, keyup changed delay:300ms from:#q-input, keyup changed delay:300ms from:#author-filter"
+  hx-push-url="true"
+>
+  <div class="flex-1">
+    <label class="text-xs font-medium text-slate-500">Search</label>
+    <input id="q-input" class="input mt-1" type="search" name="q" value="{{ q }}" placeholder="Title, author, tag, ISBN..." />
+  </div>
+  <div>
+    <label class="text-xs font-medium text-slate-500">Genre</label>
+    <select id="genre-filter" class="input mt-1" name="genre">
+      <option value="">All</option>
+      {% for g in genres %}
+        <option value="{{ g }}" {% if g == genre %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="text-xs font-medium text-slate-500">Author</label>
+    <input id="author-filter" class="input mt-1" type="search" name="author" value="{{ author }}" placeholder="Author name..." />
+  </div>
+  <label class="inline-flex items-center gap-2 text-sm text-slate-600 mb-1">
+    <input id="available-filter" class="w-4 h-4" type="checkbox" name="available_only" value="true" {% if available_only %}checked{% endif %}>
+    Available only
+  </label>
+  <button type="submit" class="btn btn-primary">Search</button>
+  <div class="htmx-indicator text-sm text-slate-500">Searching...</div>
+</form>
+
+{% include "books/_grid.html" %}
+{% endblock %}
