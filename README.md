@@ -4,6 +4,29 @@ A tiny but complete library management app built for the Valsoft assignment.
 
 **Stack:** FastAPI · SQLModel (SQLite) · Jinja2 + HTMX + Tailwind · Google SSO (Authlib) · Gemini (AI Studio API key or Vertex AI)
 
+- **Video walkthrough:** _<link to OBS demo>_
+- **Live API docs (after running):** http://localhost:8000/docs
+
+## Reviewer's 60-second tour
+
+If you just want to see it work:
+
+```bash
+python -m venv .venv && .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env       # default ADMIN_EMAILS=["you@example.com"] works as-is
+python seed.py               # ~15 demo books + an admin user
+uvicorn app.main:app --reload
+```
+
+Then open http://localhost:8000, click **Log in**, use the **dev login** form, and sign in as `you@example.com` — you will land as an **admin** and can:
+
+1. Browse the catalog and type in the search bar (live HTMX results, no page reload).
+2. Click **Add Book → Autofill with AI** to see Gemini generate metadata from just a title + author. *(Requires `GEMINI_API_KEY`; the button is disabled with a tooltip if unset.)*
+3. Open **Librarian** in the nav to chat with an AI that uses real function-calling against the catalog (`search_books`, `recommend_similar`) and returns clickable book cards.
+4. **Borrow** any book → visit **My Loans** → **Return** it. Loans get a 14-day due date; overdue ones are flagged.
+5. Sign out, log back in as a *different* email (e.g. `member@example.com`) to see the **member** role — the admin-only buttons disappear.
+
 ## Features
 
 ### Core (minimum requirements)
@@ -48,11 +71,20 @@ Open http://localhost:8000. Auto-generated API docs live at http://localhost:800
 
 ### Demo login
 
-If you haven't set up Google SSO yet, click **Log in** and use the *dev login* form. Any email listed in `ADMIN_EMAILS` will be treated as an admin (so you can add/edit/delete books). Any other email becomes a regular member.
+If you haven't set up Google SSO yet, click **Log in** and use the *dev login* form. Any email listed in `ADMIN_EMAILS` will be treated as an admin (so you can add/edit/delete books); any other email becomes a regular member.
 
-Use JSON list format for admins in `.env`, e.g.:
+Use JSON-list format for admins in `.env`, e.g.:
 
-`ADMIN_EMAILS=["admin@example.com"]`
+```
+ADMIN_EMAILS=["you@example.com"]
+```
+
+Suggested accounts while reviewing:
+
+| Email                | Role     | Purpose                                 |
+| -------------------- | -------- | --------------------------------------- |
+| `you@example.com`    | admin    | CRUD books, AI autofill, see all loans  |
+| `member@example.com` | member   | Borrow / return only                    |
 
 ### Enabling Google SSO
 
